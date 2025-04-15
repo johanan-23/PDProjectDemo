@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Cattle Detection System</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+      :root {
+        --primary-bg: #121212;
+        --card-bg: #1e1e1e;
+        --accent-color: #8a2be2; /* vibrant purple */
+        --success-color: #4caf50;
+        --warning-color: #ff9800;
+        --danger-color: #f44336;
+        --text-primary: #ffffff;
+        --text-secondary: #b3b3b3;
+        --card-border: 1px solid #333;
+      }
+
+      body {
+        font-family: "Poppins", sans-serif;
+        background-color: var(--primary-bg);
+        color: var(--text-primary);
+        margin: 0;
+        padding: 0;
+      }
+
+      .dashboard-header {
+        background: linear-gradient(135deg, #3a1c71, #d76d77, #ffaf7b);
+        padding: 20px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+      }
+
+      .dashboard-card {
+        background-color: var(--card-bg);
+        border-radius: 12px;
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+        padding: 20px;
+        margin-bottom: 20px;
+        border: var(--card-border);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+      }
+
+      .dashboard-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 12px 16px rgba(0, 0, 0, 0.3);
+      }
+
+      .stat-card {
+        text-align: center;
+        padding: 20px 15px;
+      }
+
+      .stat-value {
+        font-size: 2.5rem;
+        font-weight: bold;
+        margin: 10px 0;
+      }
+
+      .stat-title {
+        color: var (--text-secondary);
+        font-size: 1rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+      }
+
+      .cow-color {
+        color: #4caf50;
+      }
+
+      .goat-color {
+        color: #2196f3;
+      }
+
+      .horse-color {
+        color: #ff9800;
+      }
+
+      .alert-card {
+        display: flex;
+        align-items: center;
+        border-left: 4px solid var(--danger-color);
+        padding-left: 15px;
+      }
+
+      .alert-icon {
+        font-size: 2rem;
+        margin-right: 15px;
+      }
+
+      .progress {
+        height: 10px;
+        border-radius: 5px;
+        background-color: #333;
+        margin-top: 10px;
+      }
+
+      .progress-bar {
+        border-radius: 5px;
+      }
+
+      .badge {
+        padding: 8px 15px;
+        border-radius: 20px;
+        font-weight: 500;
+        margin-left: 10px;
+      }
+
+      .chart-container {
+        position: relative;
+        height: 300px;
+      }
+
+      .status-indicator {
+        width: 15px;
+        height: 15px;
+        border-radius: 50%;
+        display: inline-block;
+        margin-right: 8px;
+      }
+
+      .status-safe {
+        background-color: var(--success-color);
+      }
+
+      .status-warning {
+        background-color: var(--warning-color);
+      }
+
+      .status-danger {
+        background-color: var(--danger-color);
+      }
+
+      .status-text {
+        font-size: 1.4rem;
+        font-weight: 500;
+      }
+
+      .footer {
+        text-align: center;
+        padding: 20px;
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+      }
+
+      .animal-icon {
+        font-size: 3rem;
+        margin-bottom: 15px;
+      }
+
+      /* Fix for goat icon to ensure consistent card height */
+      .fa-sheep {
+        display: inline-block;
+        min-height: 48px; /* Ensures consistent height with other icons */
+        line-height: 1;
+      }
+
+      .card-header {
+        border-bottom: 1px solid #333;
+        padding-bottom: 15px;
+        margin-bottom: 15px;
+        font-weight: 600;
+        font-size: 1.2rem;
+      }
+
+      .danger-alert {
+        animation: pulse 1.5s infinite;
+      }
+
+      @keyframes pulse {
+        0% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.5;
+        }
+        100% {
+          opacity: 1;
+        }
+      }
+
+      .notification-area {
+        max-height: 300px;
+        overflow-y: auto;
+      }
+
+      .notification-item {
+        padding: 12px;
+        border-left: 3px solid var(--accent-color);
+        margin-bottom: 10px;
+        background-color: rgba(138, 43, 226, 0.1);
+        border-radius: 4px;
+      }
+
+      /* Custom scrollbar */
+      ::-webkit-scrollbar {
+        width: 8px;
+      }
+
+      ::-webkit-scrollbar-track {
+        background: #1e1e1e;
+      }
+
+      ::-webkit-scrollbar-thumb {
+        background: #555;
+        border-radius: 4px;
+      }
+
+      ::-webkit-scrollbar-thumb:hover {
+        background: #777;
+      }
+
+      .system-status {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .loading-spinner {
+        display: inline-block;
+        width: 15px;
+        height: 15px;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        border-radius: 50%;
+        border-top-color: #fff;
+        animation: spin 1s linear infinite;
+        margin-left: 10px;
+      }
+
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="dashboard-header">
+      <div class="container">
+        <div class="row align-items-center">
+          <div class="col-md-8">
+            <h1><i class="fas fa-satellite"></i> Cattle Detection System</h1>
+            <p class="lead mb-0">
+              Advanced AI-Powered Farm Monitoring Dashboard
+            </p>
+          </div>
+          <div class="col-md-4 text-end">
+            <div class="system-status">
+              <span>
+                <span
+                  class="status-indicator status-safe"
+                  id="system-status-indicator"
+                ></span>
+                <span class="status-text" id="system-status-text"
+                  >System Active</span
+                >
+              </span>
+              <span class="loading-spinner"></span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="container py-4">
+      <!-- Main Dashboard Content -->
+      <div class="row">
+        <!-- Animal Stats Cards -->
+        <div class="col-md-4">
+          <div class="dashboard-card stat-card">
+            <i class="fas fa-cow animal-icon cow-color"></i>
+            <div class="stat-value cow-color" id="cow-count">
+              {{ data.cow_count }}
+            </div>
+            <div class="stat-title">Cows Detected</div>
+            <div class="progress">
+              <div
+                class="progress-bar bg-success"
+                id="cow-progress"
+                role="progressbar"
+                style="width: 0%"
+                aria-valuenow="0"
+                aria-valuemin="0"
+                aria-valuemax="100"
+              ></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-4">
+          <div class="dashboard-card stat-card">
+            <i class="fas fa-paw animal-icon goat-color"></i>
+            <div class="stat-value goat-color" id="goat-count">
+              {{ data.goat_count }}
+            </div>
+            <div class="stat-title">Goats Detected</div>
+            <div class="progress">
+              <div
+                class="progress-bar bg-primary"
+                id="goat-progress"
+                role="progressbar"
+                style="width: 0%"
+                aria-valuenow="0"
+                aria-valuemin="0"
+                aria-valuemax="100"
+              ></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-4">
+          <div class="dashboard-card stat-card">
+            <i class="fas fa-horse animal-icon horse-color"></i>
+            <div class="stat-value horse-color" id="horse-count">
+              {{ data.horse_count }}
+            </div>
+            <div class="stat-title">Horses Detected</div>
+            <div class="progress">
+              <div
+                class="progress-bar bg-warning"
+                id="horse-progress"
+                role="progressbar"
+                style="width: 0%"
+                aria-valuenow="0"
+                aria-valuemin="0"
+                aria-valuemax="100"
+              ></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="row">
+        <!-- Charts Section -->
+        <div class="col-md-8">
+          <div class="dashboard-card">
+            <div class="card-header">Animal Detection Trend</div>
+            <div class="chart-container">
+              <canvas id="animalChart"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- Alert Status Section -->
+        <div class="col-md-4">
+          <div class="dashboard-card" id="alert-card">
+            <div class="card-header">Security Status</div>
+            <div id="status-container">
+              <!-- Status will be updated dynamically -->
+              <div class="alert-card">
+                <div class="alert-icon">
+                  <i class="fas fa-shield-alt"></i>
+                </div>
+                <div>
+                  <h4>System Normal</h4>
+                  <p>No threats detected in the monitoring area.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="row">
+        <!-- Activity Log / Notifications -->
+        <div class="col-md-12">
+          <div class="dashboard-card">
+            <div class="card-header">Recent Activity Log</div>
+            <div class="notification-area" id="notification-area">
+              <!-- Notifications will be added here dynamically -->
+              <div class="notification-item">
+                <strong>System Started:</strong> Cattle detection system
+                initialized and running properly.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div
+      class="alert-popup"
+      id="whatsapp-alert-popup"
+      style="
+        display: none;
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        background-color: rgba(0, 0, 0, 0.8);
+        color: white;
+        padding: 15px 20px;
+        border-radius: 8px;
+        box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+        z-index: 1000;
+        max-width: 300px;
+      "
+    >
+      <div style="display: flex; align-items: center; gap: 10px">
+        <i class="fab fa-whatsapp" style="font-size: 24px; color: #25d366"></i>
+        <div>
+          <div style="font-weight: bold">WhatsApp Alert Sent</div>
+          <div id="whatsapp-alert-message" style="font-size: 0.9rem">
+            Alert message sent to monitoring team
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <footer class="footer">
+      <div class="container">
+        <p>
+          Cattle Detection System | Developed for Product Development Lab - 2025
+          | Batch of 2026 | Mechanical Engineering | National Engineering
+          College, Kovilpatti.
+        </p>
+      </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+      // Chart initialization with placeholder data
+      const ctx = document.getElementById("animalChart").getContext("2d");
+      const animalChart = new Chart(ctx, {
+        type: "line",
+        data: {
+          labels: [], // Will be populated with timestamps
+          datasets: [
+            {
+              label: "Cows",
+              data: [],
+              borderColor: "#4caf50",
+              backgroundColor: "rgba(76, 175, 80, 0.1)",
+              tension: 0.3,
+              fill: true,
+            },
+            {
+              label: "Goats",
+              data: [],
+              borderColor: "#2196f3",
+              backgroundColor: "rgba(33, 150, 243, 0.1)",
+              tension: 0.3,
+              fill: true,
+            },
+            {
+              label: "Horses",
+              data: [],
+              borderColor: "#ff9800",
+              backgroundColor: "rgba(255, 152, 0, 0.1)",
+              tension: 0.3,
+              fill: true,
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: "top",
+              labels: {
+                color: "#b3b3b3",
+              },
+            },
+            tooltip: {
+              mode: "index",
+              intersect: false,
+            },
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              min: 0,
+              max: 10,
+              ticks: {
+                color: "#b3b3b3",
+                stepSize: 1,
+                precision: 0,
+              },
+              grid: {
+                color: "rgba(255, 255, 255, 0.1)",
+              },
+            },
+            x: {
+              ticks: {
+                color: "#b3b3b3",
+              },
+              grid: {
+                color: "rgba(255, 255, 255, 0.1)",
+              },
+            },
+          },
+        },
+      });
+
+      // Hold historical data for chart
+      const chartData = {
+        timestamps: [],
+        cows: [],
+        goats: [],
+        horses: [],
+      };
+
+      // Update notification panel
+      function addNotification(message, isPriority = false) {
+        const notificationArea = document.getElementById("notification-area");
+        const notificationItem = document.createElement("div");
+        notificationItem.className = "notification-item";
+
+        if (isPriority) {
+          notificationItem.style.borderLeft = "3px solid #f44336";
+          notificationItem.style.backgroundColor = "rgba(244, 67, 54, 0.1)";
+        }
+
+        const timestamp = new Date().toLocaleTimeString();
+        notificationItem.innerHTML = `<strong>${timestamp}:</strong> ${message}`;
+
+        notificationArea.insertBefore(
+          notificationItem,
+          notificationArea.firstChild
+        );
+
+        // Keep only the latest 10 notifications
+        if (notificationArea.children.length > 10) {
+          notificationArea.removeChild(notificationArea.lastChild);
+        }
+      }
+
+      // Update alert status
+      function updateAlertStatus(warning, isDanger, dangerAnimal) {
+        const statusContainer = document.getElementById("status-container");
+        const alertCard = document.getElementById("alert-card");
+        let html = "";
+
+        if (isDanger) {
+          html = `
+            <div class="alert-card danger-alert">
+              <div class="alert-icon">
+                <i class="fas fa-exclamation-triangle text-danger"></i>
+              </div>
+              <div>
+                <h4>DANGER ALERT!</h4>
+                <p>Dangerous animal detected: <span class="badge bg-danger">${dangerAnimal}</span></p>
+              </div>
+            </div>
+          `;
+          document.getElementById("system-status-indicator").className =
+            "status-indicator status-danger";
+          document.getElementById("system-status-text").innerText =
+            "DANGER: Animal Threat";
+          document.getElementById("system-status-text").className =
+            "status-text text-danger";
+          addNotification(
+            `DANGER! ${dangerAnimal} detected in the monitoring area!`,
+            true
+          );
+          alertCard.style.borderLeft = "4px solid #f44336";
+        } else if (warning) {
+          html = `
+            <div class="alert-card">
+              <div class="alert-icon">
+                <i class="fas fa-exclamation-circle text-warning"></i>
+              </div>
+              <div>
+                <h4>Warning</h4>
+                <p>Human detected in the monitoring area.</p>
+              </div>
+            </div>
+          `;
+          document.getElementById("system-status-indicator").className =
+            "status-indicator status-warning";
+          document.getElementById("system-status-text").innerText =
+            "Warning: Human Present";
+          document.getElementById("system-status-text").className =
+            "status-text text-warning";
+          addNotification("Human detected in the monitoring area.", false);
+          alertCard.style.borderLeft = "4px solid #ff9800";
+        } else {
+          html = `
+            <div class="alert-card">
+              <div class="alert-icon">
+                <i class="fas fa-shield-alt text-success"></i>
+              </div>
+              <div>
+                <h4>System Normal</h4>
+                <p>No threats detected in the monitoring area.</p>
+              </div>
+            </div>
+          `;
+          document.getElementById("system-status-indicator").className =
+            "status-indicator status-safe";
+          document.getElementById("system-status-text").innerText =
+            "System Normal";
+          document.getElementById("system-status-text").className =
+            "status-text";
+          alertCard.style.borderLeft = "4px solid #4caf50";
+        }
+
+        statusContainer.innerHTML = html;
+      }
+
+      // New function to update system online status
+      function updateSystemStatus(isOffline, timeSinceUpdate) {
+        const statusIndicator = document.getElementById(
+          "system-status-indicator"
+        );
+        const statusText = document.getElementById("system-status-text");
+
+        if (isOffline) {
+          statusIndicator.className = "status-indicator status-danger";
+          statusText.innerText = "Detection System Offline";
+          statusText.className = "status-text text-danger";
+
+          // Add offline notification in the status container
+          const statusContainer = document.getElementById("status-container");
+          statusContainer.innerHTML = `
+            <div class="alert-card danger-alert">
+              <div class="alert-icon">
+                <i class="fas fa-power-off text-danger"></i>
+              </div>
+              <div>
+                <h4>Detection System Offline</h4>
+                <p>The detection system has been offline for ${timeSinceUpdate}.</p>
+                <p>Data shown may not reflect current farm conditions.</p>
+              </div>
+            </div>
+          `;
+
+          // Update alert card style
+          const alertCard = document.getElementById("alert-card");
+          alertCard.style.borderLeft = "4px solid #f44336";
+
+          // Add notification
+          addNotification(
+            `Detection system offline for ${timeSinceUpdate}. Data may be stale.`,
+            true
+          );
+          return true;
+        }
+        return false;
+      }
+
+      // Update chart data
+      function updateChartData(cowCount, goatCount, horseCount) {
+        // Add current timestamp
+        const now = new Date();
+        const timeString = now.toLocaleTimeString();
+
+        // Update chart data arrays
+        chartData.timestamps.push(timeString);
+        chartData.cows.push(cowCount);
+        chartData.goats.push(goatCount);
+        chartData.horses.push(horseCount);
+
+        // Keep only the latest 10 data points
+        if (chartData.timestamps.length > 10) {
+          chartData.timestamps.shift();
+          chartData.cows.shift();
+          chartData.goats.shift();
+          chartData.horses.shift();
+        }
+
+        // Update chart
+        animalChart.data.labels = chartData.timestamps;
+        animalChart.data.datasets[0].data = chartData.cows;
+        animalChart.data.datasets[1].data = chartData.goats;
+        animalChart.data.datasets[2].data = chartData.horses;
+        animalChart.update();
+
+        // Update progress bars (assuming max count of 10 for demo purposes)
+        const maxCount = 10;
+        document.getElementById("cow-progress").style.width = `${Math.min(
+          (cowCount / maxCount) * 100,
+          100
+        )}%`;
+        document.getElementById("goat-progress").style.width = `${Math.min(
+          (goatCount / maxCount) * 100,
+          100
+        )}%`;
+        document.getElementById("horse-progress").style.width = `${Math.min(
+          (horseCount / maxCount) * 100,
+          100
+        )}%`;
+      }
+
+      // Function to fetch data from the API
+      function fetchData() {
+        fetch("/fetch-data-api/")
+          .then((response) => response.json())
+          .then((responseData) => {
+            const data = responseData.data;
+
+            // Debug what's coming from the server
+            console.log("Server response:", data);
+
+            // Check if system is offline
+            const systemIsOffline = data.system_online !== true;
+
+            // Update system status UI with correct offline status
+            const systemOffline = updateSystemStatus(
+              systemIsOffline,
+              data.time_since_update
+            );
+
+            // Only update status alerts if system is online
+            if (!systemOffline) {
+              updateAlertStatus(
+                data.warning,
+                data.is_danger,
+                data.danger_animal
+              );
+            }
+
+            // Always update animal counts (even if stale)
+            document.getElementById("cow-count").textContent = data.cow_count;
+            document.getElementById("goat-count").textContent = data.goat_count;
+            document.getElementById("horse-count").textContent =
+              data.horse_count;
+
+            // Update chart
+            updateChartData(data.cow_count, data.goat_count, data.horse_count);
+
+            // Show WhatsApp notification if an alert was sent
+            if (data.alert_sent) {
+              const alertMessage = data.is_danger
+                ? `DANGER alert for ${data.danger_animal} sent to monitoring team`
+                : "Warning alert sent to monitoring team";
+
+              showWhatsAppAlertPopup(alertMessage);
+              // Add to notification area
+              addNotification(
+                `📱 WhatsApp alert sent: ${alertMessage}`,
+                data.is_danger
+              );
+            }
+          })
+          .catch((error) => {
+            console.error("Error fetching data:", error);
+            addNotification(
+              "Error communicating with server. Check connection.",
+              true
+            );
+          });
+      }
+
+      // Show WhatsApp alert popup
+      function showWhatsAppAlertPopup(message) {
+        const popup = document.getElementById("whatsapp-alert-popup");
+        const messageEl = document.getElementById("whatsapp-alert-message");
+
+        messageEl.textContent = message;
+        popup.style.display = "block";
+
+        // Hide after 5 seconds
+        setTimeout(() => {
+          popup.style.display = "none";
+        }, 5000);
+      }
+
+      // Initial notification
+      addNotification(
+        "Dashboard initialized. Starting animal detection system..."
+      );
+      setTimeout(
+        () => addNotification("System online. Monitoring farm area."),
+        1500
+      );
+
+      // Fetch data every 2 seconds
+      setInterval(fetchData, 2000);
+
+      // Initial fetch
+      fetchData();
+    </script>
+  </body>
+</html>
